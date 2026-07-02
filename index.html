@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>Logistic Regression Lab — Learn · Quiz · Build</title>
+<style>
+  :root{
+    --ink:#16324f; --blue:#2b6cb0; --blue-soft:#eaf2fb; --paper:#f2f6fa;
+    --card:#ffffff; --line:#d3dfeb; --text:#2c3a48; --muted:#5f7080;
+    --green:#2f855a; --green-bg:#eaf5ee; --amber:#b7791f; --amber-bg:#fdf3e0;
+    --red:#b64a4a; --red-bg:#faeeee; --code-bg:#0f2237; --code-fg:#d8e6f5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--text);
+    font:16px/1.55 "Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 20px 64px}
+  .mono{font-family:Consolas,"SF Mono",Menlo,monospace}
+
+  header{border-bottom:3px solid var(--ink);padding-bottom:18px;margin-bottom:26px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-weight:600}
+  h1{margin:6px 0 4px;font-size:30px;line-height:1.15;color:var(--ink);text-wrap:balance}
+  .sub{color:var(--muted);margin:0;font-size:15px}
+
+  /* home */
+  .pathrow{display:flex;flex-direction:column;gap:10px}
+  .mcard{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);
+    padding:14px 18px;cursor:pointer;text-align:left;font:inherit;color:var(--text);transition:border-color .15s}
+  .mcard:hover,.mcard:focus-visible{border-color:var(--blue)}
+  .mcard .num{flex:0 0 40px;height:40px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:15px;color:var(--blue);background:var(--blue-soft)}
+  .mcard.done .num{background:var(--green-bg);color:var(--green)}
+  .mcard .mt{flex:1}
+  .mcard h3{margin:0;font-size:16px;color:var(--ink)}
+  .mcard p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+  .mcard .state{font-size:12.5px;font-weight:700;color:var(--muted)}
+  .mcard.done .state{color:var(--green)}
+  .capstone{background:var(--ink);border-color:var(--ink)}
+  .capstone h3,.capstone .state{color:#fff}
+  .capstone p{color:#b9cce0}
+  .capstone .num{background:#24486b;color:#fff}
+  .homefoot{margin-top:24px;font-size:13.5px;color:var(--muted)}
+  .resetlink{background:none;border:none;font:inherit;font-size:13px;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0}
+
+  /* module page */
+  .crumb{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .back{background:none;border:none;color:var(--blue);cursor:pointer;font:inherit;font-size:14px;padding:0;text-decoration:underline}
+  .lesson{background:var(--card);border:1px solid var(--line);padding:26px 28px;margin-bottom:18px}
+  .lesson h2{margin:0 0 4px;font-size:22px;color:var(--ink)}
+  .lesson .tag{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:700}
+  .lesson h3{font-size:15.5px;color:var(--ink);margin:22px 0 8px}
+  .lesson p{margin:0 0 12px;max-width:70ch}
+  .lesson ul{margin:0 0 12px;padding-left:22px}
+  .lesson li{margin-bottom:6px;max-width:65ch}
+  .kbox{background:var(--blue-soft);border-left:3px solid var(--blue);padding:12px 16px;margin:14px 0;font-size:15px}
+  .wbox{background:var(--amber-bg);border-left:3px solid var(--amber);padding:12px 16px;margin:14px 0;font-size:15px}
+  code.inline{font-family:Consolas,Menlo,monospace;font-size:.9em;background:#e8eef5;padding:1px 5px;color:var(--ink)}
+  pre.codeblock{background:var(--code-bg);color:var(--code-fg);padding:14px 16px;overflow-x:auto;
+    font:13px/1.55 Consolas,Menlo,monospace;margin:10px 0 14px}
+
+  /* sigmoid widget */
+  .widget{border:1px solid var(--line);background:#fbfdff;padding:16px 18px;margin:16px 0}
+  .widget canvas{width:100%;max-width:560px;display:block;margin:0 auto}
+  .sliders{display:flex;gap:24px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+  .sliders label{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px;min-width:200px}
+  .sliders input{width:100%}
+  .readout{text-align:center;font-size:15px;margin-top:10px}
+  .readout .pred{font-weight:800}
+
+  /* quiz */
+  .quizblock{background:var(--card);border:1px solid var(--line);margin-bottom:18px}
+  .qhead{background:var(--blue-soft);padding:10px 20px;border-bottom:1px solid var(--line);
+    font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+  .qbody{padding:20px 22px}
+  .qq{font-weight:600;color:var(--ink);margin:0 0 12px;font-size:16px}
+  .opt{display:block;width:100%;text-align:left;font:inherit;font-size:14.5px;padding:10px 14px;margin-bottom:8px;
+    background:#fff;border:1px solid var(--line);cursor:pointer;color:var(--text)}
+  .opt:hover:not(:disabled),.opt:focus-visible:not(:disabled){border-color:var(--blue);background:var(--blue-soft)}
+  .opt.correct{border-color:var(--green);background:var(--green-bg);font-weight:600}
+  .opt.wrong{border-color:var(--red);background:var(--red-bg)}
+  .opt:disabled{cursor:default}
+  .explain{margin-top:10px;padding:12px 14px;font-size:14.5px;background:var(--green-bg);border-left:3px solid var(--green)}
+  .explain.bad{background:var(--red-bg);border-left-color:var(--red)}
+
+  .btn{font:inherit;font-size:15px;font-weight:600;padding:10px 20px;cursor:pointer;
+    border:1px solid var(--ink);background:var(--ink);color:#fff}
+  .btn:hover,.btn:focus-visible{background:var(--blue);border-color:var(--blue)}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.ghost:hover,.btn.ghost:focus-visible{background:var(--blue-soft)}
+  .btn:disabled{opacity:.45;cursor:default}
+  .navrow{display:flex;gap:10px;justify-content:space-between;margin-top:8px;flex-wrap:wrap}
+
+  /* challenge */
+  .sect{background:var(--card);border:1px solid var(--line);margin-bottom:16px}
+  .sect summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer}
+  .sect summary::-webkit-details-marker{display:none}
+  .sect .snum{flex:0 0 34px;height:34px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;color:var(--blue);background:var(--blue-soft)}
+  .sect.pass .snum{background:var(--green-bg);color:var(--green)}
+  .sect summary h3{margin:0;font-size:15.5px;color:var(--ink);flex:1}
+  .sect .spill{font-size:12px;font-weight:700;color:var(--muted)}
+  .sect.pass .spill{color:var(--green)}
+  .sbody{padding:0 20px 20px;border-top:1px solid var(--line)}
+  .sbody .task{margin:14px 0 10px;max-width:70ch}
+  .sbody ul{padding-left:20px;margin:0 0 12px}
+  .sbody li{margin-bottom:4px;font-size:14.5px;max-width:65ch}
+  .codein{width:100%;min-height:150px;padding:12px 14px;border:1px solid var(--line);resize:vertical;
+    background:var(--code-bg);color:var(--code-fg);font:13px/1.55 Consolas,Menlo,monospace}
+  .codein:focus{outline:2px solid var(--blue);outline-offset:-1px}
+  .checkrow{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  .feedback{margin-top:12px}
+  .fitem{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:6px 10px;margin-bottom:5px}
+  .fitem.ok{background:var(--green-bg);color:#245c41}
+  .fitem.miss{background:var(--amber-bg);color:#7a5411}
+  .fitem.err{background:var(--red-bg);color:#7c3535}
+  .fitem .fi{font-weight:800;flex:0 0 16px}
+  .verdict{font-weight:700;font-size:15px;margin:10px 0 2px}
+  .verdict.pass{color:var(--green)} .verdict.almost{color:var(--amber)} .verdict.fail{color:var(--red)}
+  .solwrap{margin-top:12px}
+  .hintline{font-size:13px;color:var(--muted);margin-top:8px}
+
+  @media (max-width:560px){ h1{font-size:24px} .lesson{padding:20px 16px} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap" id="app" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   LESSON CONTENT — 8 modules
+   ============================================================ */
+const MODULES = [
+{id:"m1", title:"What Is Classification — and Why Not Linear Regression?",
+ blurb:"Binary problems, and why a straight line can't answer a yes/no question.",
+ body: `
+  <h3>The idea</h3>
+  <p>Many business questions have exactly <b>two possible answers</b>: will this customer churn or stay?
+  Is this transaction fraud or legitimate? Will this loan default or be repaid? These are
+  <b>binary classification</b> problems — "binary" means two.</p>
+  <h3>The details</h3>
+  <p>You already know linear regression predicts a <b>continuous number</b> (any value from −∞ to +∞).
+  A yes/no question needs something different: a <b>probability between 0 and 1</b> that we can turn
+  into a decision. If you force a straight line onto a 0/1 target, it will happily predict values like
+  −0.3 or 1.4 — probabilities below 0% or above 100%, which are mathematically meaningless.</p>
+  <p><b>Logistic regression</b> is the classification counterpart: same idea of learning one coefficient
+  per feature, but the output is passed through a squashing function so it always lands between 0 and 1.
+  Despite the word "regression" in its name, it is a classification algorithm — the name comes from the
+  <i>logistic function</i> it uses internally.</p>
+  <div class="kbox"><b>Quick rule:</b> if the business answer is yes/no, churn/stay, fraud/not,
+  approved/denied — it's binary classification, and logistic regression is the first tool to try.</div>
+  <h3>Vocabulary to lock in</h3>
+  <ul>
+    <li><b>Features (X)</b> — input columns (credit score, income, loan amount).</li>
+    <li><b>Target (y)</b> — the output column, containing only 0s and 1s.</li>
+    <li><b>Positive class (1)</b> — the thing you're trying to detect: fraud, churn, default.</li>
+    <li><b>Negative class (0)</b> — the more common "nothing happened" category.</li>
+  </ul>`,
+ quiz:[
+  {q:"Which of these is a binary classification problem?",
+   opts:["Predicting next quarter's revenue in dollars",
+         "Predicting whether a patient will be readmitted within 30 days",
+         "Predicting how many days a shipment will take",
+         "Predicting a house's sale price"],
+   correct:1,
+   why:"Readmitted / not readmitted has exactly two outcomes — binary classification. The other three all predict continuous numbers (regression)."},
+  {q:"Why can't plain linear regression be used directly for a yes/no problem?",
+   opts:["It's too slow to train on classification data",
+         "It requires more data than logistic regression",
+         "Its output can go below 0 or above 1 — impossible values for a probability",
+         "It can only use one feature at a time"],
+   correct:2,
+   why:"A straight line is unbounded: it will produce values like −0.3 or 1.4, which can't be probabilities. Logistic regression squashes its output into the 0–1 range."}
+ ]},
+
+{id:"m2", title:"The Sigmoid Function",
+ blurb:"The S-shaped curve that turns any number into a probability. Interactive.",
+ body: `
+  <h3>The idea</h3>
+  <p>At the heart of logistic regression is the <b>sigmoid (logistic) function</b> — an S-shaped curve
+  that takes <i>any</i> number as input and always outputs a value between 0 and 1.</p>
+  <pre class="codeblock">sigmoid(z) = 1 / (1 + e^(−z))</pre>
+  <h3>The details</h3>
+  <p>Internally, logistic regression first computes a <b>linear score</b>, exactly like linear
+  regression: <code class="inline">z = b + m₁x₁ + m₂x₂ + ...</code>. That z can be any number.
+  The sigmoid then converts z into a probability:</p>
+  <ul>
+    <li>Large positive z (e.g., +4) → probability near <b>1</b> (very confident YES)</li>
+    <li>z = 0 → probability exactly <b>0.5</b> (the model can't decide)</li>
+    <li>Large negative z (e.g., −4) → probability near <b>0</b> (very confident NO)</li>
+  </ul>
+  <p>Drag the sliders below: <b>z</b> is the model's raw score for one customer; the
+  <b>threshold</b> is the cutoff you choose for saying YES.</p>
+  <div class="widget" id="sigwidget">
+    <canvas id="sigcanvas" width="560" height="300" aria-label="Sigmoid curve visualization"></canvas>
+    <div class="sliders">
+      <label>Model score z = <span id="zval" class="mono">0.0</span>
+        <input type="range" id="zslider" min="-6" max="6" step="0.1" value="0"></label>
+      <label>Threshold = <span id="tval" class="mono">0.50</span>
+        <input type="range" id="tslider" min="0.05" max="0.95" step="0.05" value="0.5"></label>
+    </div>
+    <p class="readout">P(positive class) = <b id="pval" class="mono">0.500</b> →
+      prediction: <span class="pred" id="predout">—</span></p>
+  </div>
+  <div class="kbox"><b>Key takeaway:</b> the model never outputs "yes" or "no" directly.
+  It outputs a probability; <i>you</i> convert it to a decision with a threshold.</div>`,
+ quiz:[
+  {q:"A customer's linear score is z = −3. Roughly what probability does the sigmoid produce?",
+   opts:["About 0.95","Exactly 0.5","About 0.05","Exactly −3 — the sigmoid passes it through"],
+   correct:2,
+   why:"Negative scores map below 0.5; at z = −3 the sigmoid outputs ≈ 0.047. The sigmoid never outputs a value outside 0–1."},
+  {q:"At what z value does the sigmoid output exactly 0.5?",
+   opts:["z = 1","z = 0","z = 0.5","It never outputs exactly 0.5"],
+   correct:1,
+   why:"sigmoid(0) = 1/(1+e⁰) = 1/2. That point is the natural 'can't decide' center of the curve."}
+ ]},
+
+{id:"m3", title:"Thresholds & the Decision Boundary",
+ blurb:"Turning probabilities into decisions — and why 0.5 is rarely the right cutoff.",
+ body: `
+  <h3>The idea</h3>
+  <p>The <b>threshold</b> is the cutoff that converts a probability into a final yes/no. scikit-learn's
+  default is 0.5: probability 0.72 → YES, probability 0.43 → NO. The <b>decision boundary</b> is the
+  line in feature space that separates the two predicted categories — where the boundary sits is
+  directly controlled by the threshold.</p>
+  <h3>The details</h3>
+  <p>Moving the threshold trades one kind of mistake for another — this is the heart of applied
+  classification:</p>
+  <ul>
+    <li><b>Lower threshold (e.g., 0.3):</b> you say YES more often → you catch more real positives
+    (<b>recall ↑</b>) but raise more false alarms (<b>precision ↓</b>). Use when missing a real case is
+    expensive: medical screening, fraud detection.</li>
+    <li><b>Higher threshold (e.g., 0.7):</b> you say YES only when very confident → fewer false alarms
+    (<b>precision ↑</b>) but you miss more real cases (<b>recall ↓</b>). Use when false alarms are
+    expensive: blocking legitimate credit-card transactions.</li>
+  </ul>
+  <div class="wbox"><b>Watch out:</b> the default 0.5 is a starting point, not an answer. In practice you
+  test thresholds in a loop (0.1, 0.2, … 0.9), print precision and recall at each, and pick the one that
+  minimizes the most <i>costly</i> error. The math tells you what happens at each threshold —
+  <b>only the business context tells you which tradeoff is acceptable.</b></div>`,
+ quiz:[
+  {q:"A false negative (missed disease) is far more costly than a false positive (extra screening). Which threshold direction is right?",
+   opts:["Raise it above 0.5 to be more careful",
+         "Keep 0.5 — it's the statistically correct value",
+         "Lower it below 0.5 to catch more real cases",
+         "Thresholds don't affect false negatives"],
+   correct:2,
+   why:"Lowering the threshold makes the model say YES more readily: recall rises (fewer missed cases) at the price of more false alarms — the right trade when misses are the expensive error."},
+  {q:"You raise the threshold from 0.5 to 0.8. What happens?",
+   opts:["Precision up, recall down","Precision down, recall up",
+         "Both go up — higher thresholds are strictly better","Nothing changes until you retrain"],
+   correct:0,
+   why:"A higher bar for YES means predictions are more often right when made (precision ↑) but more real positives slip through (recall ↓). You can't maximize both — that's the precision-recall tradeoff."}
+ ]},
+
+{id:"m4", title:"Reading the Model: Coefficients & the Intercept",
+ blurb:"What the learned numbers mean, and the sanity check every analyst must run.",
+ body: `
+  <h3>The idea</h3>
+  <p>After training, the model has learned one <b>coefficient</b> per feature (in
+  <code class="inline">model.coef_</code>) plus an <b>intercept</b>
+  (<code class="inline">model.intercept_</code>). These are the model — reading them tells you what it
+  believes.</p>
+  <h3>The details</h3>
+  <ul>
+    <li>A <b>positive coefficient</b> pushes the prediction toward the positive class (1); a
+    <b>negative coefficient</b> pushes toward the negative class (0).</li>
+    <li>The <b>magnitude</b> tells you how strong the effect is — but only compare magnitudes if the
+    features were <b>scaled</b> first (otherwise units distort everything).</li>
+    <li>The <b>intercept</b> is the baseline score when every (scaled) feature is 0 — it shifts the
+    decision boundary up or down.</li>
+  </ul>
+  <p>Worked example from a loan-default model (positive class = default):
+  credit score <b>−0.82</b>, debt <b>+0.74</b>, income <b>−0.61</b>. Read: higher credit score →
+  less likely to default (strongest effect); more debt → more likely; higher income → less likely.</p>
+  <div class="kbox"><b>The sanity check:</b> always print your coefficients after training and ask
+  "does the <i>direction</i> of each one make business sense?" If higher credit score got a
+  <i>positive</i> default coefficient, don't present the model — investigate your data. Coefficients
+  that fight common sense usually mean a data problem (leakage, bad encoding, flipped labels).</div>`,
+ quiz:[
+  {q:"In a churn model (positive class = churned), monthly_bill has coefficient +0.72, months_subscribed −0.58, num_referrals −0.31. Which customer profile is highest risk?",
+   opts:["Low bill, long tenure, many referrals",
+         "High bill, short tenure, few referrals",
+         "High bill, long tenure, many referrals",
+         "The coefficients alone can't say anything"],
+   correct:1,
+   why:"Positive coefficient (bill) pushes toward churn; negative ones (tenure, referrals) pull away. High bill + short tenure + few referrals stacks all three toward the positive (churn) class."},
+  {q:"Your loan-default model gives credit_score a coefficient of +0.9 (higher score → MORE default risk). What should you do?",
+   opts:["Report it — the model knows best",
+         "Flip the sign manually before presenting",
+         "Treat it as a red flag and investigate the data before trusting the model",
+         "Increase max_iter and it will fix itself"],
+   correct:2,
+   why:"A coefficient that contradicts domain knowledge is a warning sign — often data leakage, a mis-encoded column, or flipped labels. Never hand-edit coefficients; find the root cause."}
+ ]},
+
+{id:"m5", title:"How It Learns: Log Loss & Gradient Descent",
+ blurb:"What actually happens inside model.fit().",
+ body: `
+  <h3>The idea</h3>
+  <p>Training = finding the coefficients that make predictions least wrong. "Least wrong" is measured
+  by a <b>cost function</b>; for logistic regression that is <b>log loss</b> (also called binary
+  cross-entropy). The search that minimizes it is <b>gradient descent</b> — running silently inside
+  every <code class="inline">model.fit()</code> call.</p>
+  <h3>The details</h3>
+  <ul>
+    <li><b>Log loss</b> penalizes the model <i>enormously</i> for being confidently wrong (predicting
+    0.95 when the truth is 0) and only lightly for being uncertain. This trains well-calibrated
+    probabilities, not just correct labels.</li>
+    <li><b>Gradient descent</b> adjusts the coefficients step by step, each time moving in the direction
+    that reduces the loss: <code class="inline">new = old − learning_rate × gradient</code>.</li>
+    <li><b>Convergence</b> = the loss has stopped improving; the coefficients are as good as they'll
+    get. In scikit-learn, the step budget is <code class="inline">max_iter</code>.</li>
+  </ul>
+  <div class="wbox"><b>Watch out:</b> a <code class="inline">ConvergenceWarning</code> means gradient
+  descent ran out of steps before converging — the coefficients may be suboptimal. Fix: set
+  <code class="inline">max_iter=1000</code> (the default 100 is too low for many real datasets), and
+  make sure features are scaled — unscaled features make the loss landscape a distorted canyon that is
+  slow to descend.</div>
+  <p>Regularization also lives here: scikit-learn applies <b>L2 regularization by default</b>,
+  controlled by <b>C</b> (inverse strength). Overfitting (train ≫ test)? <b>Lower C.</b>
+  Underfitting (both poor)? <b>Raise C.</b></p>`,
+ quiz:[
+  {q:"Why does log loss (not accuracy) get minimized during training?",
+   opts:["Accuracy is too expensive to compute repeatedly",
+         "Log loss is smooth and punishes confident wrong answers, giving gradient descent a useful signal at every step",
+         "Log loss is only used for display purposes",
+         "scikit-learn doesn't support accuracy"],
+   correct:1,
+   why:"Accuracy is a step function (jumps only when a prediction flips), so it gives no gradient. Log loss changes smoothly with every coefficient nudge and heavily penalizes confident mistakes — ideal for optimization."},
+  {q:"Training accuracy 98%, test accuracy 61%. Which knob, in which direction?",
+   opts:["Raise C — more model freedom","Lower C — stronger regularization",
+         "Raise max_iter to 5000","Lower the threshold to 0.3"],
+   correct:1,
+   why:"That gap is overfitting. C is inverse regularization strength: lowering C (e.g., 1.0 → 0.01) constrains the coefficients and forces a simpler model that generalizes better."}
+ ]},
+
+{id:"m6", title:"Preparing the Data Properly",
+ blurb:"Split → scale → encode, stratify=y, and the data-leakage golden rule.",
+ body: `
+  <h3>The idea</h3>
+  <p>Most logistic regression failures are <b>data preparation</b> failures. Four rules cover nearly
+  everything.</p>
+  <h3>The details</h3>
+  <ul>
+    <li><b>Rule 1 — Split before anything else.</b>
+    <code class="inline">train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)</code>.
+    The test set must stay untouched until final evaluation. <b>stratify=y</b> keeps the same class
+    proportion in both sets — always use it for classification.</li>
+    <li><b>Rule 2 — Scale after splitting, and fit the scaler on train only.</b>
+    <code class="inline">scaler.fit_transform(X_train)</code> then
+    <code class="inline">scaler.transform(X_test)</code>. Fitting on the full dataset lets the test
+    set's statistics leak into training — <b>data leakage</b>, the classic silent mistake that makes
+    models look better than they are.</li>
+    <li><b>Rule 3 — Everything must be numeric.</b> Encode text categories with
+    <code class="inline">pd.get_dummies()</code>; handle missing values with
+    <code class="inline">dropna()</code> / <code class="inline">fillna()</code> — logistic regression
+    crashes on NaNs.</li>
+    <li><b>Rule 4 — Reproducibility.</b> Set <code class="inline">random_state=42</code> everywhere
+    randomness exists, so anyone rerunning your notebook gets identical results.</li>
+  </ul>
+  <div class="wbox"><b>The golden rule, memorized:</b> <i>split first, then scale; fit_transform on
+  train, transform (only) on test — and reuse that same fitted scaler for any future prediction.</i></div>`,
+ quiz:[
+  {q:"A teammate runs scaler.fit_transform on the FULL dataset, then splits into train/test. Why is this wrong?",
+   opts:["The scaler will crash on that many rows",
+         "The scaler learned the test set's mean/std, so test information leaked into preprocessing — the test set is no longer truly unseen",
+         "It's fine — scaling doesn't involve the target",
+         "fit_transform can only be called after model.fit"],
+   correct:1,
+   why:"This is data leakage. Even though only X is involved, the test rows influenced the scaling statistics, so evaluation is quietly optimistic. Split first, then fit the scaler on train only."},
+  {q:"What does stratify=y do in train_test_split, and when do you need it?",
+   opts:["Sorts the data by target value; needed for time series",
+         "Keeps the same class proportions in train and test; use it for every classification split",
+         "Removes duplicate rows; needed for messy data",
+         "Speeds up splitting on large datasets"],
+   correct:1,
+   why:"Without it, a random split can put most minority-class rows into one set — silently distorting training and evaluation. It costs nothing; always use it for classification."}
+ ]},
+
+{id:"m7", title:"Evaluation: the Confusion Matrix & the Metrics That Matter",
+ blurb:"TP/FP/FN/TN, the accuracy trap, precision vs recall, F1, and AUC.",
+ body: `
+  <h3>The idea</h3>
+  <p>Every classification metric is computed from four numbers — the <b>confusion matrix</b>:</p>
+  <ul>
+    <li><b>TP</b> — predicted YES, actually YES · <b>TN</b> — predicted NO, actually NO</li>
+    <li><b>FP</b> — predicted YES, actually NO (<i>false alarm</i>, Type 1 error)</li>
+    <li><b>FN</b> — predicted NO, actually YES (<i>missed case</i>, Type 2 error)</li>
+  </ul>
+  <pre class="codeblock">Accuracy  = (TP + TN) / Total        "How often is it right overall?"
+Precision = TP / (TP + FP)           "Of my YES calls, how many were right?"
+Recall    = TP / (TP + FN)           "Of the real YES cases, how many did I catch?"
+F1        = 2·P·R / (P + R)          "One number balancing both"</pre>
+  <h3>The details</h3>
+  <div class="wbox"><b>The Accuracy Trap:</b> with a 5% fraud rate, a model that always says
+  "not fraud" scores 95% accuracy while catching <i>zero</i> fraud. High accuracy on imbalanced data
+  can mean nothing. Always look at the confusion matrix — it shows the actual failure modes.</div>
+  <p><b>ROC curve & AUC:</b> the ROC curve plots true-positive rate (recall) against false-positive
+  rate across <i>every</i> threshold at once. <b>AUC</b> (area under it) summarizes the whole curve:
+  0.5 = random guessing, 0.7+ acceptable, 0.8+ good, 0.9+ excellent. Because AUC is
+  threshold-independent and robust to imbalance, it is the <b>best single metric for comparing two
+  models</b>. In code: <code class="inline">roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])</code>
+  — note it takes <i>probabilities</i>, not labels.</p>`,
+ quiz:[
+  {q:"A spam filter on 200 emails: 120 TN, 60 TP, 12 FP, 8 FN. What is its recall?",
+   opts:["90%","83.3%","88.2%","60%"],
+   correct:2,
+   why:"Recall = TP/(TP+FN) = 60/68 ≈ 88.2%. (Accuracy is 90%, precision is 60/72 ≈ 83.3% — make sure you can produce all three from the four numbers.)"},
+  {q:"Model A: AUC 0.91. Model B: 94% accuracy, AUC 0.63, on data with 4% positives. Which is better and why?",
+   opts:["B — 94% accuracy is excellent",
+         "A — AUC is threshold-independent and robust to imbalance; B's accuracy mostly reflects the 96% majority class",
+         "They're equivalent; pick the faster one",
+         "Neither can be compared without F1"],
+   correct:1,
+   why:"With 4% positives, predicting 'no' always gets 96% accuracy — so 94% is worse than doing nothing. AUC 0.63 confirms B barely ranks positives above negatives. Trust AUC for comparison."}
+ ]},
+
+{id:"m8", title:"Class Imbalance",
+ blurb:"The most common real-world problem — and the one-line first fix.",
+ body: `
+  <h3>The idea</h3>
+  <p><b>Class imbalance</b> = one category vastly outnumbers the other (95% legit / 5% fraud;
+  84% stay / 16% churn). Left alone, the model learns that predicting the majority class is an easy way
+  to score well — and becomes useless at the thing you actually care about.</p>
+  <h3>The details</h3>
+  <p>Signs you have it: <code class="inline">y.value_counts()</code> shows more than ~70/30; accuracy
+  looks great while recall on the minority class is terrible.</p>
+  <ul>
+    <li><b>First fix (one line):</b> <code class="inline">LogisticRegression(class_weight='balanced')</code>
+    — makes the model pay proportionally more attention to minority-class mistakes during training.
+    Try this before anything fancier.</li>
+    <li><b>Threshold move:</b> lower the threshold when recall is the priority.</li>
+    <li><b>Resampling:</b> oversample the minority (SMOTE) when you have very few positive examples;
+    undersample the majority when the dataset is huge.</li>
+    <li><b>Evaluate correctly:</b> under imbalance, judge with recall/precision on the minority class
+    and AUC — never accuracy alone.</li>
+  </ul>
+  <div class="kbox"><b>Checklist you can recite:</b> check balance with value_counts →
+  stratify=y in the split → class_weight='balanced' in the model → judge by confusion matrix,
+  minority-class recall, and AUC → tune the threshold to the business cost.</div>`,
+ quiz:[
+  {q:"10,000 loans, 97% accuracy — but recall on the default class is 12%. What happened?",
+   opts:["The model is excellent; ship it",
+         "The 3% default rate let the model win accuracy by predicting 'no default' almost always — class imbalance",
+         "max_iter is too low",
+         "The threshold is too low"],
+   correct:1,
+   why:"97% accuracy while catching 12% of defaulters is the accuracy paradox in action. First fix: class_weight='balanced', then re-judge with recall and AUC."},
+  {q:"What does class_weight='balanced' actually do?",
+   opts:["Duplicates minority rows until classes are equal",
+         "Deletes majority rows",
+         "Weights minority-class errors more heavily in the loss during training",
+         "Changes the prediction threshold to the class ratio"],
+   correct:2,
+   why:"It reweights the cost function — a mistake on a rare positive costs proportionally more — without touching the data itself. (Resampling methods like SMOTE change the data instead.)"}
+ ]},
+];
+
+/* ============================================================
+   CAPSTONE CHALLENGE — bank loan default (7 sections)
+   ============================================================ */
+const CH_INTRO = `You are a data scientist at a bank. Management wants a model that predicts which
+loan applicants are likely to <b>default</b>, so risky applications get a second review. You'll build a
+complete logistic regression pipeline in <b>Google Colab</b> — then paste each section of your code here
+to have it checked. The dataset is synthetic (generated with numpy), deliberately imbalanced
+(~25% defaults), and noisy — just like the course challenge.`;
+
+const SECTIONS = [
+{title:"Setup & generate the data",
+ task:`In a new Colab notebook: import the libraries you'll need for the whole project, then run the
+ data-generation code below (given to you — paste it as-is into Colab and into the answer box together
+ with your imports).`,
+ hints:["You'll need: pandas, numpy, train_test_split, StandardScaler, LogisticRegression, and metrics (confusion_matrix, classification_report, roc_auc_score, precision_score, recall_score, f1_score).",
+        "The seed makes your results reproducible — graders (and you tomorrow) get identical numbers."],
+ given:`import numpy as np
+import pandas as pd
+np.random.seed(42)
+n = 1000
+df = pd.DataFrame({
+    "annual_income":    np.random.normal(55000, 20000, n).clip(15000, 150000),
+    "credit_score":     np.random.normal(650, 80, n).clip(300, 850),
+    "loan_amount":      np.random.normal(15000, 7000, n).clip(1000, 60000),
+    "months_employed":  np.random.normal(48, 24, n).clip(0, 240),
+    "num_credit_lines": np.random.randint(1, 10, n),
+})
+score = (-0.00003*df.annual_income - 0.008*df.credit_score
+         + 0.00005*df.loan_amount - 0.01*df.months_employed
+         + 0.05*df.num_credit_lines + np.random.normal(0, 0.5, n))
+df["default"] = (score > score.quantile(0.75)).astype(int)`,
+ checks:[
+  {re:/import\s+pandas|from\s+pandas/, ok:"pandas imported", miss:"Import pandas (import pandas as pd)."},
+  {re:/import\s+numpy|from\s+numpy/, ok:"numpy imported", miss:"Import numpy (import numpy as np)."},
+  {re:/train_test_split/, ok:"train_test_split imported", miss:"Import train_test_split from sklearn.model_selection."},
+  {re:/StandardScaler/, ok:"StandardScaler imported", miss:"Import StandardScaler from sklearn.preprocessing."},
+  {re:/LogisticRegression/, ok:"LogisticRegression imported", miss:"Import LogisticRegression from sklearn.linear_model."},
+  {re:/confusion_matrix|classification_report|roc_auc_score/, ok:"metrics imported", miss:"Import evaluation metrics from sklearn.metrics (confusion_matrix, classification_report, roc_auc_score…)."},
+  {re:/np\.random\.seed\(\s*42\s*\)/, ok:"seed set for reproducibility", miss:"Set np.random.seed(42) before generating data."},
+ ],
+ sol:`import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (confusion_matrix, classification_report,
+                             roc_auc_score, precision_score, recall_score, f1_score)
+
+np.random.seed(42)
+n = 1000
+df = pd.DataFrame({
+    "annual_income":    np.random.normal(55000, 20000, n).clip(15000, 150000),
+    "credit_score":     np.random.normal(650, 80, n).clip(300, 850),
+    "loan_amount":      np.random.normal(15000, 7000, n).clip(1000, 60000),
+    "months_employed":  np.random.normal(48, 24, n).clip(0, 240),
+    "num_credit_lines": np.random.randint(1, 10, n),
+})
+score = (-0.00003*df.annual_income - 0.008*df.credit_score
+         + 0.00005*df.loan_amount - 0.01*df.months_employed
+         + 0.05*df.num_credit_lines + np.random.normal(0, 0.5, n))
+df["default"] = (score > score.quantile(0.75)).astype(int)
+print("Setup complete:", df.shape)`},
+
+{title:"Explore the data",
+ task:`Before any modeling, inspect what you have: look at the first rows, the shape, summary
+ statistics, missing values, and — most important — the class balance of the target.`,
+ hints:["Five commands cover it: head, shape, describe, isnull().sum(), and value_counts on the target.",
+        "value_counts(normalize=True) shows proportions — is this dataset imbalanced? (It should be ~75/25.)"],
+ given:null,
+ checks:[
+  {re:/\.head\s*\(/, ok:"previews rows with .head()", miss:"Look at the first rows with df.head()."},
+  {re:/\.shape/, ok:"checks .shape", miss:"Check dimensions with df.shape."},
+  {re:/\.describe\s*\(/, ok:"summary stats with .describe()", miss:"Get summary statistics with df.describe()."},
+  {re:/isnull\s*\(\s*\)\s*\.\s*sum|isna\s*\(\s*\)\s*\.\s*sum/, ok:"checks missing values", miss:"Check missing values with df.isnull().sum()."},
+  {re:/value_counts\s*\(/, ok:"checks class balance with value_counts()", miss:"Check the target's class balance with df['default'].value_counts(normalize=True) — this is the step people skip."},
+ ],
+ sol:`print(df.head())
+print("Shape:", df.shape)
+print(df.describe())
+print("Missing values:\\n", df.isnull().sum())
+print("Class balance:\\n", df["default"].value_counts(normalize=True))
+# ~75% repaid (0) vs ~25% default (1) -> imbalanced. Remember this for the model step.`},
+
+{title:"Separate features & target, then split",
+ task:`Create X (all five feature columns) and y (the default column). Split 80/20 with a fixed
+ random_state — and make sure both sets keep the same default rate.`,
+ hints:["Which parameter keeps class proportions equal across train and test? (Module 6, Rule 1.)",
+        "Verify: print y_train.mean() and y_test.mean() — both should be ≈ 0.25."],
+ given:null,
+ checks:[
+  {re:/X\s*=/, ok:"X defined", miss:"Define X with the feature columns (e.g., X = df.drop(columns='default'))."},
+  {re:/y\s*=/, ok:"y defined", miss:"Define y = df['default']."},
+  {re:/train_test_split\s*\(/, ok:"uses train_test_split", miss:"Split with train_test_split(...)."},
+  {re:/test_size\s*=/, ok:"test_size specified", miss:"Specify test_size=0.2 (an 80/20 split)."},
+  {re:/random_state\s*=/, ok:"random_state set (reproducible)", miss:"Set random_state=42 so the split is reproducible."},
+  {re:/stratify\s*=\s*y/, ok:"stratify=y — class balance preserved", miss:"Add stratify=y — with an imbalanced target this is essential (Module 6)."},
+ ],
+ sol:`X = df.drop(columns="default")
+y = df["default"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y)
+
+print("Train:", X_train.shape, " Test:", X_test.shape)
+print("Default rate — train: %.3f  test: %.3f" % (y_train.mean(), y_test.mean()))`},
+
+{title:"Scale the features",
+ task:`Standardize the features so they all contribute fairly to gradient descent. Do it the
+ leak-proof way.`,
+ hints:["Golden rule: fit_transform on the TRAINING data, transform (only) on the TEST data.",
+        "If you call fit_transform on X_test, the checker will flag it — that's data leakage."],
+ given:null,
+ checks:[
+  {re:/StandardScaler\s*\(\s*\)/, ok:"creates a StandardScaler", miss:"Create the scaler: scaler = StandardScaler()."},
+  {re:/fit_transform\s*\(\s*X_train/, ok:"fit_transform on X_train", miss:"Fit and transform the training data: scaler.fit_transform(X_train)."},
+  {re:/(?<!fit_)transform\s*\(\s*X_test/, ok:"transform (only) on X_test", miss:"Transform the test data with scaler.transform(X_test) — using the statistics learned from train."},
+  {re:/fit_transform\s*\(\s*X_test/, invert:true, ok:"no fit_transform on the test set", err:"fit_transform(X_test) is DATA LEAKAGE — the scaler must never learn statistics from the test set. Use scaler.transform(X_test)."},
+ ],
+ sol:`scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)   # learn mean/std from TRAIN only
+X_test_scaled  = scaler.transform(X_test)        # apply the same scaling to test
+
+print("Scaled train mean ≈", X_train_scaled.mean(axis=0).round(2))
+print("Scaled train std  ≈", X_train_scaled.std(axis=0).round(2))`},
+
+{title:"Train the model",
+ task:`Train a LogisticRegression on the scaled training data. Handle the class imbalance you found in
+ Section 2, give gradient descent enough steps, and then print the coefficients and sanity-check their
+ directions against business sense.`,
+ hints:["Two constructor arguments matter here — one for imbalance (Module 8), one for convergence (Module 5).",
+        "After fitting: pair each feature name with its coefficient. Should credit_score's sign be positive or negative for predicting default?"],
+ given:null,
+ checks:[
+  {re:/LogisticRegression\s*\(/, ok:"creates LogisticRegression", miss:"Create the model with LogisticRegression(...)."},
+  {re:/class_weight\s*=\s*['"]balanced['"]/, ok:"class_weight='balanced' — imbalance handled", miss:"Add class_weight='balanced' — you saw a 75/25 imbalance in Section 2."},
+  {re:/max_iter\s*=\s*\d{3,}/, ok:"max_iter raised (≥100s) — convergence protected", miss:"Set max_iter=1000 to avoid the ConvergenceWarning."},
+  {re:/\.fit\s*\(\s*X_train/, ok:"fits on the (scaled) training data", miss:"Train with model.fit(X_train_scaled, y_train)."},
+  {re:/coef_/, ok:"inspects coefficients", miss:"Print model.coef_ alongside feature names and sanity-check the signs (Module 4)."},
+ ],
+ sol:`model = LogisticRegression(class_weight="balanced", max_iter=1000, random_state=42)
+model.fit(X_train_scaled, y_train)
+
+coefs = pd.Series(model.coef_[0], index=X.columns).sort_values()
+print(coefs)
+print("Intercept:", model.intercept_[0].round(3))
+# Sanity check: credit_score and months_employed should be NEGATIVE
+# (higher -> less default risk); num_credit_lines and loan_amount POSITIVE.`},
+
+{title:"Predict & evaluate properly",
+ task:`Generate both class predictions and probabilities on the test set, then evaluate beyond
+ accuracy: confusion matrix, full classification report, and AUC.`,
+ hints:["predict() gives labels at the 0.5 threshold; predict_proba()[:, 1] gives the probability of default — AUC needs the probabilities.",
+        "From the confusion matrix: how many real defaulters did the model miss (FN)? That's the number the bank cares about."],
+ given:null,
+ checks:[
+  {re:/\.predict\s*\(\s*X_test/, ok:"class predictions on test", miss:"Get class predictions: y_pred = model.predict(X_test_scaled)."},
+  {re:/predict_proba\s*\(/, ok:"probabilities with predict_proba", miss:"Get probabilities with model.predict_proba(X_test_scaled)[:, 1] — needed for AUC and thresholds."},
+  {re:/confusion_matrix\s*\(/, ok:"confusion matrix computed", miss:"Compute confusion_matrix(y_test, y_pred) and read TN/FP/FN/TP."},
+  {re:/classification_report\s*\(/, ok:"full classification report", miss:"Print classification_report(y_test, y_pred) for per-class precision/recall/F1."},
+  {re:/roc_auc_score\s*\(/, ok:"AUC computed", miss:"Compute roc_auc_score(y_test, probabilities) — the best single comparison metric."},
+ ],
+ sol:`y_pred  = model.predict(X_test_scaled)
+y_proba = model.predict_proba(X_test_scaled)[:, 1]
+
+tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+print(f"TN={tn}  FP={fp}  FN={fn}  TP={tp}")
+print(classification_report(y_test, y_pred, digits=3))
+print("AUC:", roc_auc_score(y_test, y_proba).round(3))
+# Judge by recall on class 1 and AUC - NOT accuracy alone (75/25 imbalance).`},
+
+{title:"Tune the threshold to the business",
+ task:`The bank says a missed defaulter (FN) costs ~$5,000; a false alarm (FP) costs ~$500 of review
+ time. Loop over thresholds 0.1–0.9, print precision/recall/F1 at each, then choose a threshold and
+ justify it in a comment in business terms.`,
+ hints:["Loop: for t in np.arange(0.1, 0.91, 0.1): preds = (y_proba >= t).astype(int)",
+        "FN is 10× costlier than FP — should your chosen threshold be above or below 0.5? (Module 3.)",
+        "Add zero_division=0 to precision_score to silence warnings at extreme thresholds."],
+ given:null,
+ checks:[
+  {re:/for\s+.+\s+in\s+/, ok:"loops over thresholds", miss:"Write a loop over candidate thresholds (e.g., np.arange(0.1, 0.91, 0.1))."},
+  {re:/>=\s*t|>\s*t|>=\s*threshold|>\s*threshold/, ok:"converts probabilities with the threshold", miss:"Convert probabilities to labels with (y_proba >= t).astype(int)."},
+  {re:/precision_score\s*\(|precision/i, ok:"tracks precision", miss:"Compute precision at each threshold (precision_score)."},
+  {re:/recall_score\s*\(|recall/i, ok:"tracks recall", miss:"Compute recall at each threshold (recall_score)."},
+  {re:/#.*|justif|choose|chosen|because/i, ok:"includes a justification", miss:"Add a comment choosing a threshold and justifying it with the $5,000 vs $500 costs."},
+ ],
+ sol:`for t in np.arange(0.1, 0.91, 0.1):
+    preds = (y_proba >= t).astype(int)
+    p = precision_score(y_test, preds, zero_division=0)
+    r = recall_score(y_test, preds)
+    f = f1_score(y_test, preds)
+    print(f"threshold {t:.1f} -> precision {p:.2f}  recall {r:.2f}  F1 {f:.2f}")
+
+# Business choice: a missed defaulter costs $5,000 vs $500 for a review,
+# so false negatives are 10x costlier -> favor RECALL -> pick a LOW threshold.
+# Around t = 0.3 recall is high while precision stays workable: the bank
+# reviews more applications, but reviews are cheap relative to defaults.
+CHOSEN_T = 0.3
+final_preds = (y_proba >= CHOSEN_T).astype(int)
+tn, fp, fn, tp = confusion_matrix(y_test, final_preds).ravel()
+cost = fn*5000 + fp*500
+print(f"At t={CHOSEN_T}: FN={fn}, FP={fp}, estimated error cost = \${cost:,}")`},
+];
+
+/* ============================================================
+   APP STATE / PERSISTENCE
+   ============================================================ */
+const app = document.getElementById("app");
+const LS = "logreg-lab-v1";
+function loadP(){ try{ return JSON.parse(localStorage.getItem(LS)) || {mods:{}, code:{}, sect:{}}; }catch(e){ return {mods:{}, code:{}, sect:{}}; } }
+function saveP(p){ try{ localStorage.setItem(LS, JSON.stringify(p)); }catch(e){} }
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function renderHome(){
+  const p = loadP();
+  const doneCount = MODULES.filter(m=>p.mods[m.id]).length;
+  const sectDone = SECTIONS.filter((s,i)=>p.sect[i]).length;
+  let rows = MODULES.map((m,i)=>{
+    const done = !!p.mods[m.id];
+    return `<button class="mcard ${done?"done":""}" data-mod="${i}">
+      <span class="num">${done?"&#10003;":i+1}</span>
+      <span class="mt"><h3>${m.title}</h3><p>${m.blurb}</p></span>
+      <span class="state">${done?"Completed":"Start"}</span>
+    </button>`;
+  }).join("");
+  rows += `<button class="mcard capstone" data-mod="challenge">
+      <span class="num">&#9733;</span>
+      <span class="mt"><h3>Capstone Challenge: Predict Loan Defaults</h3>
+      <p>A 7-section Python build in Google Colab — paste your code here, get it checked section by section.</p></span>
+      <span class="state">${sectDone}/${SECTIONS.length} sections</span>
+    </button>`;
+  app.innerHTML = `
+    <header>
+      <div class="eyebrow">Full Stack AI-Driven Data Analytics · Session 20 Deep Dive</div>
+      <h1>Logistic Regression Lab</h1>
+      <p class="sub">Learn each concept → check yourself with a quiz → build a real model in Python.
+      Progress: ${doneCount}/${MODULES.length} lessons · ${sectDone}/${SECTIONS.length} challenge sections.</p>
+    </header>
+    <div class="pathrow">${rows}</div>
+    <p class="homefoot">Work top to bottom — each lesson feeds the next, and the capstone uses all of them.
+    Progress saves on this device. <button class="resetlink" id="reset">Reset all progress</button></p>`;
+  app.querySelectorAll("[data-mod]").forEach(b=>b.addEventListener("click",()=>{
+    if(b.dataset.mod==="challenge") renderChallenge();
+    else renderModule(parseInt(b.dataset.mod,10));
+  }));
+  document.getElementById("reset").addEventListener("click",()=>{
+    if(confirm("Reset all lesson and challenge progress?")){ localStorage.removeItem(LS); renderHome(); }
+  });
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   MODULE (lesson + quiz)
+   ============================================================ */
+function renderModule(idx){
+  const m = MODULES[idx];
+  const p = loadP();
+  let quizHtml = m.quiz.map((q,qi)=>`
+    <div class="quizblock">
+      <div class="qhead">Check yourself — question ${qi+1} of ${m.quiz.length}</div>
+      <div class="qbody" data-q="${qi}">
+        <p class="qq">${q.q}</p>
+        ${q.opts.map((o,oi)=>`<button class="opt" data-oi="${oi}">${esc(o)}</button>`).join("")}
+        <div class="exwrap"></div>
+      </div>
+    </div>`).join("");
+  app.innerHTML = `
+    <div class="crumb">
+      <button class="back" id="back">&#8592; All lessons</button>
+      <span class="mono" style="font-size:13px;color:var(--muted)">Lesson ${idx+1} / ${MODULES.length}</span>
+    </div>
+    <div class="lesson">
+      <span class="tag">Lesson ${idx+1}</span>
+      <h2>${m.title}</h2>
+      ${m.body}
+    </div>
+    ${quizHtml}
+    <div class="navrow">
+      <button class="btn ghost" id="prev" ${idx===0?"disabled":""}>&#8592; Previous</button>
+      <button class="btn" id="next">${idx<MODULES.length-1?"Next lesson &#8594;":"Go to the Capstone Challenge &#8594;"}</button>
+    </div>`;
+  document.getElementById("back").addEventListener("click",renderHome);
+  document.getElementById("prev").addEventListener("click",()=>renderModule(idx-1));
+  document.getElementById("next").addEventListener("click",()=>{
+    const pr = loadP(); pr.mods[m.id]=true; saveP(pr);
+    if(idx<MODULES.length-1) renderModule(idx+1); else renderChallenge();
+  });
+  // quiz wiring
+  app.querySelectorAll(".qbody").forEach(qb=>{
+    const qi = parseInt(qb.dataset.q,10);
+    const q = m.quiz[qi];
+    qb.querySelectorAll(".opt").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        const pick = parseInt(btn.dataset.oi,10);
+        qb.querySelectorAll(".opt").forEach(b=>{
+          b.disabled = true;
+          const oi = parseInt(b.dataset.oi,10);
+          if(oi===q.correct) b.classList.add("correct");
+          else if(oi===pick) b.classList.add("wrong");
+        });
+        const good = pick===q.correct;
+        qb.querySelector(".exwrap").innerHTML =
+          `<div class="explain ${good?"":"bad"}"><b>${good?"Correct.":"Not quite."}</b> ${q.why}</div>`;
+      });
+    });
+  });
+  if(idx===1) initSigmoid();
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   SIGMOID WIDGET
+   ============================================================ */
+function initSigmoid(){
+  const cv = document.getElementById("sigcanvas");
+  if(!cv) return;
+  const ctx = cv.getContext("2d");
+  const zs = document.getElementById("zslider"), ts = document.getElementById("tslider");
+  const sig = z => 1/(1+Math.exp(-z));
+  const W=560, H=300, L=50, R=20, T=18, B=36;
+  const x2px = z => L + (z+6)/12*(W-L-R);
+  const y2px = p => T + (1-p)*(H-T-B);
+  function draw(){
+    const z = parseFloat(zs.value), t = parseFloat(ts.value), p = sig(z);
+    ctx.clearRect(0,0,W,H);
+    // grid + axes
+    ctx.strokeStyle="#dfe8f1"; ctx.lineWidth=1;
+    [0,0.25,0.5,0.75,1].forEach(g=>{ ctx.beginPath(); ctx.moveTo(L,y2px(g)); ctx.lineTo(W-R,y2px(g)); ctx.stroke(); });
+    ctx.fillStyle="#5f7080"; ctx.font="11px Consolas,monospace"; ctx.textAlign="right";
+    [0,0.5,1].forEach(g=>ctx.fillText(g.toFixed(1), L-6, y2px(g)+4));
+    ctx.textAlign="center";
+    [-6,-3,0,3,6].forEach(g=>ctx.fillText(g, x2px(g), H-14));
+    ctx.fillText("z (model score)", (L+W-R)/2, H-2);
+    // threshold region
+    ctx.fillStyle="rgba(47,133,90,0.08)";
+    ctx.fillRect(L, T, W-L-R, y2px(t)-T);
+    // threshold line
+    ctx.strokeStyle="#b7791f"; ctx.setLineDash([5,4]); ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(L,y2px(t)); ctx.lineTo(W-R,y2px(t)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle="#b7791f"; ctx.textAlign="left";
+    ctx.fillText("threshold "+t.toFixed(2), L+6, y2px(t)-5);
+    // sigmoid curve
+    ctx.strokeStyle="#2b6cb0"; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(let i=0;i<=240;i++){
+      const zz = -6 + i*12/240;
+      const px = x2px(zz), py = y2px(sig(zz));
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    // point
+    ctx.fillStyle = p>=t ? "#2f855a" : "#b64a4a";
+    ctx.beginPath(); ctx.arc(x2px(z), y2px(p), 7, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#fff"; ctx.lineWidth=2; ctx.stroke();
+    // readouts
+    document.getElementById("zval").textContent = z.toFixed(1);
+    document.getElementById("tval").textContent = t.toFixed(2);
+    document.getElementById("pval").textContent = p.toFixed(3);
+    const pred = document.getElementById("predout");
+    pred.textContent = p>=t ? "POSITIVE (1) — e.g., flag as default" : "NEGATIVE (0) — e.g., approve";
+    pred.style.color = p>=t ? "#2f855a" : "#b64a4a";
+  }
+  zs.addEventListener("input",draw); ts.addEventListener("input",draw);
+  draw();
+}
+
+/* ============================================================
+   CHALLENGE
+   ============================================================ */
+function stripComments(code){
+  return code.split("\n").map(l=>{
+    const i = l.indexOf("#");
+    return i>=0 ? l.slice(0,i) : l;
+  }).join("\n");
+}
+
+function checkSection(si, code){
+  const s = SECTIONS[si];
+  const items = [];
+  let okCount = 0, required = 0, hardFail = false;
+  s.checks.forEach(c=>{
+    // comment-justification checks look at full code; others at stripped
+    const target = c.re.source.startsWith("#") || /justif|comment/i.test(c.miss||"") ? code : code;
+    const hit = c.re.test(target);
+    if(c.invert){
+      if(hit){ items.push({cls:"err", fi:"&#10007;", text:c.err}); hardFail = true; }
+      else { items.push({cls:"ok", fi:"&#10003;", text:c.ok}); }
+    } else {
+      required++;
+      if(hit){ okCount++; items.push({cls:"ok", fi:"&#10003;", text:c.ok}); }
+      else { items.push({cls:"miss", fi:"&#9675;", text:c.miss}); }
+    }
+  });
+  const pass = !hardFail && okCount===required;
+  const almost = !hardFail && okCount>=required-1 && okCount<required;
+  return {items, pass, almost, hardFail, okCount, required};
+}
+
+function renderChallenge(openIdx){
+  const p = loadP();
+  const doneCount = SECTIONS.filter((s,i)=>p.sect[i]).length;
+  const sectionsHtml = SECTIONS.map((s,i)=>{
+    const done = !!p.sect[i];
+    const open = openIdx===i || (openIdx===undefined && i===SECTIONS.findIndex((x,xi)=>!p.sect[xi]));
+    const saved = (p.code && p.code[i]) || "";
+    return `<details class="sect ${done?"pass":""}" ${open?"open":""} data-si="${i}">
+      <summary><span class="snum">${done?"&#10003;":i+1}</span><h3>${s.title}</h3>
+        <span class="spill">${done?"Passed":"Section "+(i+1)+" of "+SECTIONS.length}</span></summary>
+      <div class="sbody">
+        <p class="task">${s.task}</p>
+        <ul>${s.hints.map(h=>`<li>${h}</li>`).join("")}</ul>
+        ${s.given?`<p style="font-size:13.5px;color:var(--muted);margin:0 0 4px"><b>Given code</b> (paste into Colab):</p><pre class="codeblock">${esc(s.given)}</pre>`:""}
+        <label class="hintline" for="code${i}" style="display:block;margin-bottom:4px">Paste your Python code for this section:</label>
+        <textarea class="codein" id="code${i}" spellcheck="false" placeholder="# your code here...">${esc(saved)}</textarea>
+        <div class="checkrow">
+          <button class="btn" data-check="${i}">Check my code</button>
+          <button class="btn ghost" data-sol="${i}">Show solution</button>
+        </div>
+        <div class="feedback" id="fb${i}"></div>
+        <div class="solwrap" id="sol${i}"></div>
+      </div>
+    </details>`;
+  }).join("");
+  app.innerHTML = `
+    <div class="crumb">
+      <button class="back" id="back">&#8592; All lessons</button>
+      <span class="mono" style="font-size:13px;color:var(--muted)">${doneCount}/${SECTIONS.length} sections passed</span>
+    </div>
+    <header style="border:none;padding:0;margin-bottom:14px">
+      <div class="eyebrow">Capstone Challenge</div>
+      <h1>Predict Loan Defaults</h1>
+      <p class="sub">${CH_INTRO}</p>
+    </header>
+    ${sectionsHtml}
+    ${doneCount===SECTIONS.length?`<div class="kbox" style="margin-top:8px"><b>All sections passed — challenge complete!</b>
+      You built an end-to-end classifier: explored imbalanced data, split and scaled it leak-free, trained a
+      balanced model, evaluated beyond accuracy, and tuned the threshold to real business costs. That is the
+      full Session 20 skill set. Screenshot this page for your submission.</div>`:""}`;
+  document.getElementById("back").addEventListener("click",renderHome);
+  app.querySelectorAll("[data-check]").forEach(b=>b.addEventListener("click",()=>{
+    const i = parseInt(b.dataset.check,10);
+    const code = document.getElementById("code"+i).value;
+    const pr = loadP(); pr.code = pr.code||{}; pr.code[i]=code; saveP(pr);
+    if(!code.trim()){
+      document.getElementById("fb"+i).innerHTML = `<div class="fitem err"><span class="fi">&#10007;</span>Paste your code first — write it in Colab, confirm it runs, then paste it here.</div>`;
+      return;
+    }
+    const res = checkSection(i, code);
+    let head;
+    if(res.hardFail) head = `<p class="verdict fail">Stop — there's a critical mistake to fix:</p>`;
+    else if(res.pass) head = `<p class="verdict pass">&#10003; Section passed — all ${res.required} checks found. (${res.okCount}/${res.required})</p>`;
+    else if(res.almost) head = `<p class="verdict almost">Almost — ${res.okCount}/${res.required} checks passed. One thing left:</p>`;
+    else head = `<p class="verdict fail">${res.okCount}/${res.required} checks passed — keep going:</p>`;
+    document.getElementById("fb"+i).innerHTML = head +
+      res.items.map(it=>`<div class="fitem ${it.cls}"><span class="fi">${it.fi}</span><span>${it.text}</span></div>`).join("");
+    if(res.pass){
+      const pr2 = loadP(); pr2.sect[i]=true; saveP(pr2);
+      setTimeout(()=>renderChallenge(i+1<SECTIONS.length?i+1:i), 1200);
+    }
+  }));
+  app.querySelectorAll("[data-sol]").forEach(b=>b.addEventListener("click",()=>{
+    const i = parseInt(b.dataset.sol,10);
+    const el = document.getElementById("sol"+i);
+    if(el.innerHTML){ el.innerHTML=""; b.textContent="Show solution"; return; }
+    el.innerHTML = `<p class="hintline"><b>Model solution</b> — compare line by line with what you wrote, then close this and try to reproduce it from memory:</p>
+      <pre class="codeblock">${esc(SECTIONS[i].sol)}</pre>`;
+    b.textContent = "Hide solution";
+  }));
+  window.scrollTo(0,0);
+}
+
+renderHome();
+</script>
+
+</body>
+</html>
